@@ -73,7 +73,7 @@ int mps_bottom_up(string s){
             int ans;
             int j = i + k;
             if(s[i] == s[j]){
-                ans = max(ans, 2 + dp[i + 1][j - 1]);
+                ans = 2 + dp[i + 1][j - 1];
             }
             else{
                 ans = max(dp[i + 1][j], dp[i][j - 1]);
@@ -93,5 +93,5 @@ int mps_bottom_up(string s){
 
 int main(){
     string s = "racecar";
-    mps_bottom_up(s);
+    cout << mps_bottom_up(s);
 }
