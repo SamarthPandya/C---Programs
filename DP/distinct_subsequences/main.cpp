@@ -3,6 +3,10 @@
 using namespace std;
 
 /*
+Problem: https://leetcode.com/problems/distinct-subsequences/description/
+
+Solution
+---------
 State space
 -----------
 S = {(i, j) | 0 <= i < m, 0 <= j < n}
@@ -58,7 +62,32 @@ int numDistinct(string s, string t) {
     return dp[m][n];
 }
 
+int space_optimised_bottom_up(string s, string t){
+    int m = s.size(), n = t.size();
+    vector<unsigned long>curr(n + 1, 0);
+    curr[0] = 1;
+    for(int j = 1; j <= n; j++){
+        curr[j] = 0;
+    }
+
+    for(int i = 1; i <= m; i++){
+        vector<unsigned long>temp(n + 1);
+        temp[0] = 1;
+        for(int j = 1; j <= n; j++){
+            int res = curr[j];
+            if(s[i - 1] == t[j - 1]){
+                res += curr[j - 1];
+            }
+            temp[j] = res;
+        }
+        curr = temp;
+    }
+    
+    return curr.back();
+
+}
+
 int main(){
     string s = "rabbbit", t = "rabbit";
-    cout << numDistinct(s, t);
+    cout << space_optimised_bottom_up(s, t);
 }
