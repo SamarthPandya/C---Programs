@@ -1,9 +1,6 @@
 #include <iostream>
 #include <vector>
-#include <algorithm> // For std::shuffle
-#include <numeric>	 // For std::iota
-#include <random>	 // For the random number engine
-#include <chrono>	 // For seeding the engine
+
 
 using namespace std;
 
