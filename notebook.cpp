@@ -1,52 +1,58 @@
 #include <iostream>
-#include <unordered_set>
+#include <vector>
 
 using namespace std;
 
-/*
-For each index i, the plan is to save two vals, 
-1) Length of the longest increasing subsequence ending at i : inc(i)
-2) Length of the longest decreasing subsequence starting at i : dec(i)
-
-these two can be found using the lis algorithm
-
-start with res = 1
-res = max({dec(i) + inc(i) - 1} | 0 <= i < n})
-*/
-
-int longestBitonicSubsequence(vector<int>& arr, int n)
+void get_all_subsets_of_size_helper(int i, int curr_size, int &curr_mask, int &k, int &n, vector<int> &res)
 {
-	vector<pair<int, int>>dp(n, {1, 1});
-    
-    // for inc
-    for(int i = 1; i < n; i++){
-        int res = 1;
-        for(int j = 0; j < i; j++){
-            if(arr[j] < arr[i]){
-                res = max(res, 1 + dp[j].first);
-            }
-        }
-        dp[i].first = res;
-    }
+	
+	if (curr_size == k)
+	{
+		res.push_back(curr_mask);
+		return;
+	}
 
-    int ans = 1;
+	if (i == n + 1)
+	{
+		return;
+	}
 
-    // for dec
-    for(int i = n - 1; i >= 0; i--){
-        int res = 1;
-        for(int j = n - 1; j > i; j--){
-            if(arr[j] < arr[i]){
-                res = max(res, 1 + dp[j].second);
-            }
-        }
-        dp[i].second = res;
-        ans = max(ans, dp[i].first + dp[i].second - 1);
-    }
+	// exclude
+	get_all_subsets_of_size_helper(i + 1, curr_size, curr_mask, k, n, res);
 
-    return ans;
+	// include
+	if (curr_size + 1 <= k)
+	{
+		curr_mask = curr_mask + (1 << (i - 1));
+		get_all_subsets_of_size_helper(i + 1, curr_size + 1, curr_mask, k, n, res);
+		curr_mask = curr_mask - (1 << (i - 1));
+	}
 }
 
-int main() {
-    vector<int>arr = {1, 2, 1, 2, 1};
-    cout << longestBitonicSubsequence(arr, arr.size());
+vector<int> get_all_masks_of_size(int k, int n)
+{
+	vector<int> res;
+	int curr_size = 0;
+	int curr_mask = 0;
+	get_all_subsets_of_size_helper(1, curr_size, curr_mask, k, n, res);
+	return res;
+}
+
+vector<int> get_all_subsets_of_size_one_less(int masked_subset, int n){
+	vector<int>res;
+	for(int i = 1; i <= n; i++){
+		if(masked_subset & (1 << (i - 1))){
+			res.push_back(masked_subset - (1 << (i - 1)));
+		}
+	}
+	return res;
+}
+
+int main()
+{
+	vector<int>res = get_all_subsets_of_size_one_less(6, 3);
+	for(int i : res){
+		cout << i << endl;
+	}
+    return 0;
 }

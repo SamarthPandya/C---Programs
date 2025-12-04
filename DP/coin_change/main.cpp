@@ -13,7 +13,6 @@ S = {r | 0 <= r <= amount}
 s(r) denotes the minimum coins required to create an amount r
 
 Base state : f(0) = 0 no coins needed
-
 End state: f(amount)
 
 Recursion
@@ -39,7 +38,7 @@ int top_down(vector<int>&coins, int amount){
     unordered_map<int, int>dp;
     dp[0] = 0;
     int ans = helper(amount, coins, dp);
-    ans == INT_MAX ? -1 : ans;
+    return ans == INT_MAX ? -1 : ans;
 }
 
 int bottom_up(vector<int>&coins, int amount){
@@ -59,5 +58,5 @@ int bottom_up(vector<int>&coins, int amount){
 
 int main(){
     vector<int>coins = {1, 2, 5};
-    return 0;
+    cout << bottom_up(coins, 100) << endl;
 }

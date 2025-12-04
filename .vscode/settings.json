@@ -33,6 +33,7 @@
         "unordered_map": "cpp",
         "variant": "cpp",
         "cwchar": "cpp",
-        "algorithm": "cpp"
+        "algorithm": "cpp",
+        "set": "cpp"
     }
 }
