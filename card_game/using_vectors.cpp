@@ -1,9 +1,5 @@
 #include <iostream>
 #include <vector>
-#include <algorithm> // For std::shuffle
-#include <numeric>	 // For std::iota
-#include <random>	 // For the random number engine
-#include <chrono>	 // For seeding the engine
 
 using namespace std;
 
@@ -165,7 +161,7 @@ double play_baseline(int n, vector<int> deck)
 
 int main()
 {
-	vector<int> deck = {1, 3, 2};
+	vector<int> deck = {3, 2, 1};
 	cout << play_baseline(deck.size(), deck) << endl;
 	cout << play_dp(deck.size(), deck);
 }

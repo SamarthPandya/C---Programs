@@ -184,35 +184,39 @@ vector<vector<int>> get_all_permutations(int n) {
     return all_permutations;
 }
 
-int main()
-{
-	const int N = 12;
-    
-    // Set global formatting for console output:
-    // 1. fixed: Ensure all numbers use fixed-point notation (e.g., 3.0000)
-    // 2. setprecision(4): Display exactly 4 digits after the decimal point
-    cout << fixed << setprecision(4);
-    
-    auto perms = get_all_permutations(N);
+void stress_test_driver() {
+    cout << "N\tTime(s)\tStates(2^N)\tEst. RAM(Map)" << endl;
+    cout << "------------------------------------------------" << endl;
 
-    // Print Header
-    cout << "--- Rewards (N=" << N << ") where DP > Baseline ---" << endl;
-    cout << setw(15) << "DP Reward" << setw(15) << "Baseline Avg" << endl;
-    cout << "---------------------------------" << endl;
+    for (int n = 1; n <= 32; n++) { // 32 is typically the theoretical limit for 'unsigned long' masks
+        auto start = chrono::high_resolution_clock::now();
 
-    for(const auto& deck : perms){
-        // Calculate rewards once to avoid redundant calls
-        double dp = play_dp(N, deck);
-        double bl = play_baseline(N, deck);
-        
-        // Apply the requested filter
-        if(dp > bl){
-            // Pretty Printing using std::setw(15)
-            // setw(15) sets the minimum column width to 15 characters
-            cout << setw(15) << dp 
-                 << setw(15) << bl << endl;
+        try {
+            unordered_map<unsigned long, double> value;
+            unordered_map<unsigned long, bool> decision;
+            
+            // Only call the generation logic, don't play the game
+            generate_decision_table(n, value, decision);
+
+            auto end = chrono::high_resolution_clock::now();
+            chrono::duration<double> diff = end - start;
+            
+            // Rough estimation of map overhead: ~64 bytes per entry
+            double est_mem_gb = (pow(2, n) * 64) / (1024.0 * 1024.0 * 1024.0);
+            
+            cout << n << "\t" 
+                 << fixed << setprecision(4) << diff.count() << "\t" 
+                 << (1UL << n) << "\t\t" 
+                 << setprecision(2) << est_mem_gb << " GB" << endl;
+
+        } catch (const std::bad_alloc& e) {
+            cout << "\n[CRASH] Memory limit reached at N=" << n << " (std::bad_alloc)" << endl;
+            break;
         }
     }
+}
 
+int main() {
+    stress_test_driver();
     return 0;
 }
