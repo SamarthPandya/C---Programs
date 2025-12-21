@@ -1,0 +1,150 @@
+#include <vector>
+#include <unordered_map>
+
+using namespace std;
+
+class Dp_v0
+{
+private:
+    int n = -1;
+    unordered_map<unsigned long, double> value;
+    unordered_map<unsigned long, bool> decision;
+
+    void get_k_masks_helper(int i, int curr_size, unsigned long &curr_mask, int k, int n, vector<unsigned long> &res)
+    {
+
+        if (curr_size == k)
+        {
+            res.push_back(curr_mask);
+            return;
+        }
+
+        if (i == n + 1)
+        {
+            return;
+        }
+
+        // exclude
+        get_k_masks_helper(i + 1, curr_size, curr_mask, k, n, res);
+
+        // include
+        if (curr_size + 1 <= k)
+        {
+            curr_mask = curr_mask + (1UL << (i - 1));
+            get_k_masks_helper(i + 1, curr_size + 1, curr_mask, k, n, res);
+            curr_mask = curr_mask - (1UL << (i - 1));
+        }
+    }
+    vector<unsigned long> get_k_masks(int k, int n)
+    {
+        vector<unsigned long> res;
+        int curr_size = 0;
+        unsigned long curr_mask = 0;
+        get_k_masks_helper(1, curr_size, curr_mask, k, n, res);
+        return res;
+    }
+
+    vector<unsigned long> get_all_masks_of_size_one_less(unsigned long masked_subset, int n)
+    {
+        vector<unsigned long> res;
+        for (int i = 1; i <= n; i++)
+        {
+            if (masked_subset & (1UL << (i - 1)))
+            {
+                res.push_back(masked_subset - (1UL << (i - 1)));
+            }
+        }
+        return res;
+    }
+
+    double expected_optimal_reward_if_hit(unsigned long mask, int size_of_mask, unordered_map<unsigned long, double> &value, int n)
+    {
+        auto masks_of_one_less = get_all_masks_of_size_one_less(mask, n);
+        double res = 0;
+        for (auto mask_of_one_less : masks_of_one_less)
+        {
+            res += value[mask_of_one_less];
+        }
+        res = res / (double)size_of_mask;
+        return res;
+    }
+
+    double expected_optimal_reward_if_settle(unsigned long mask, int size_of_mask, int n)
+    {
+        if (size_of_mask == n)
+        {
+            return 0;
+        }
+        double tot = (n * (n + 1)) / 2;
+        for (int i = 1; i <= n; i++)
+        {
+            if (mask & (1UL << (i - 1)))
+            {
+                tot -= i;
+            }
+        }
+        tot = tot / (double)(n - size_of_mask);
+        return tot;
+    }
+
+    void generate_decision_table(int n, unordered_map<unsigned long, double> &value, unordered_map<unsigned long, bool> &decision)
+    {
+
+        // precompute for subsets of size 1
+        double baseline_average = (n + 1) / 2;
+        for (double i = 1; i <= n; i++)
+        {
+            unsigned long masked_value = (1UL << (int)(i - 1));
+            if (i > baseline_average)
+            {
+                decision[masked_value] = true;
+                value[masked_value] = baseline_average;
+            }
+            else
+            {
+                decision[masked_value] = false;
+                value[masked_value] = (((n * (n + 1) / 2.0)) - i) / (double)(n - 1);
+            }
+        }
+
+        for (int k = 2; k <= n; k++)
+        {
+            auto masks = get_k_masks(k, n);
+            for (auto mask : masks)
+            {
+                auto hit_reward = expected_optimal_reward_if_hit(mask, k, value, n);
+                auto settle_reward = expected_optimal_reward_if_settle(mask, k, n);
+                decision[mask] = hit_reward > settle_reward ? true : false;
+                value[mask] = max(hit_reward, settle_reward);
+            }
+        }
+    }
+
+public:
+    double play(int n, vector<int> deck)
+    {
+
+        unordered_map<unsigned long, double> value;
+        unordered_map<unsigned long, bool> decision;
+        
+        if (n != this->n)
+        {
+            this->n = n;
+            generate_decision_table(n, value, decision);
+        }
+
+        unsigned long curr_remaining = (1UL << (n)) - 1;
+        int i = 0;
+        double reward = 0;
+        while (i < n && decision[curr_remaining])
+        {
+            // cout << "hit : " << deck[i] << endl;
+            reward += (double)deck[i];
+            curr_remaining = curr_remaining - (1UL << (deck[i] - 1));
+            i++;
+        }
+        reward /= (double)(i);
+        // cout << "-------" << "\nreward: " << reward << endl;
+        return reward;
+    }
+};

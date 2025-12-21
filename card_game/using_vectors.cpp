@@ -3,6 +3,22 @@
 
 using namespace std;
 
+void GospersHack(int k, int n, vector<unsigned long>&res)
+{
+    unsigned long set = (1 << k) - 1;
+    unsigned limit = (1 << n);
+    while (set < limit)
+    {
+        
+		res.push_back(set);
+        // Gosper's hack:
+        unsigned long c = set & - set;
+        unsigned long r = set + c;
+        set = (((r ^ set) >> 2) / c) | r;
+    }
+}
+
+
 void get_all_subsets_of_size_helper(int i, int curr_size, unsigned long &curr_mask, int k, int n, vector<unsigned long> &res)
 {
 
@@ -32,9 +48,7 @@ void get_all_subsets_of_size_helper(int i, int curr_size, unsigned long &curr_ma
 vector<unsigned long> get_all_masks_of_size(int k, int n)
 {
 	vector<unsigned long> res;
-	int curr_size = 0;
-	unsigned long curr_mask = 0;
-	get_all_subsets_of_size_helper(1, curr_size, curr_mask, k, n, res);
+	GospersHack(k, n, res);
 	return res;
 }
 
@@ -51,7 +65,7 @@ vector<unsigned long> get_all_masks_of_size_one_less(unsigned long masked_subset
 	return res;
 }
 
-double expected_optimal_reward_if_hit(unsigned long mask, int size_of_mask, unordered_map<unsigned long, double> &value, int n)
+double expected_optimal_reward_if_hit(unsigned long mask, int size_of_mask, vector<double> &value, int n)
 {
 	auto masks_of_one_less = get_all_masks_of_size_one_less(mask, n);
 	double res = 0;
@@ -81,7 +95,7 @@ double expected_optimal_reward_if_settle(unsigned long mask, int size_of_mask, i
 	return tot;
 }
 
-void generate_decision_table(int n, unordered_map<unsigned long, double> &value, unordered_map<unsigned long, bool> &decision)
+void generate_decision_table(int n, vector<double> &value, vector<bool> &decision)
 {
 
 	// precompute for subsets of size 1
@@ -116,9 +130,9 @@ void generate_decision_table(int n, unordered_map<unsigned long, double> &value,
 
 double play_dp(int n, vector<int> deck)
 {
-
-	unordered_map<unsigned long, double> value;
-	unordered_map<unsigned long, bool> decision;
+	unsigned long size = (1UL << (n)) + 1;
+	vector<double> value(size);
+	vector<bool> decision(size);
 	generate_decision_table(n, value, decision);
 
 	unsigned long curr_remaining = (1UL << (n)) - 1;
@@ -161,7 +175,7 @@ double play_baseline(int n, vector<int> deck)
 
 int main()
 {
-	vector<int> deck = {3, 2, 1};
-	cout << play_baseline(deck.size(), deck) << endl;
+	vector<int> deck = {1, 5, 4, 2, 3};
+	//cout << play_baseline(deck.size(), deck) << endl;
 	cout << play_dp(deck.size(), deck);
 }

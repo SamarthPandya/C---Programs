@@ -1,7 +1,6 @@
 #include <iostream>
 #include <vector>
 
-
 using namespace std;
 
 void get_all_subsets_of_size_helper(int i, int curr_size, unsigned long &curr_mask, int k, int n, vector<unsigned long> &res)
@@ -127,6 +126,7 @@ double play_dp(int n, vector<int> deck)
 	double reward = 0;
 	while (i < n && decision[curr_remaining])
 	{
+		cout << curr_remaining << " - " << value[curr_remaining] << " - " << decision[curr_remaining] << endl;
 		cout << "hit : " << deck[i] << endl;
 		reward += (double)deck[i];
 		curr_remaining = curr_remaining - (1UL << (deck[i] - 1));
@@ -162,7 +162,8 @@ double play_baseline(int n, vector<int> deck)
 
 int main()
 {
-	vector<int> deck = {1, 3, 2};
+	vector<int> deck = {1, 6, 5, 2, 4, 3};
+	//vector<int> deck = {1, 4, 3, 2};
 	cout << play_baseline(deck.size(), deck) << endl;
 	cout << play_dp(deck.size(), deck);
 }
