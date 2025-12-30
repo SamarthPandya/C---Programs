@@ -7,12 +7,12 @@ Problem: https://www.naukri.com/code360/problems/number-of-subsets_3952532?sourc
 
 Solution
 --------
-Given an array and am int target, we wish to count the number of subsets of arr that sum up to target
+Given an array and an int target, we wish to count the number of subsets of arr that sum up to target
 
 Ref to build the solution from: subarray_target_sum/main.cpp
 State space
 -----------
-S = {(i, j) | 0 <= i <= n, 0 <= j <= starget}
+S = {(i, j) | 0 <= i <= n, 0 <= j <= target}
 
 s(i, j) denotes the number of subsets of {a1, a2...ai} summing up to j
 

@@ -5,74 +5,127 @@
 using namespace std;
 
 /*
-Problem: Given an array of n positive integers, find the value of the largest subset-sum
-which is divisible by 3.
-
 State space
-============
-S = {(i, m) | 0 <= i < n, m = 0, 1, 2}
-dp(i, m) denotes the largest subset-sum of the array a0,...,ai whose modulo 3 is m
+===========
+S = {(i, j) | 1 <= i <= n, i - 1 <= j <= n}
+(i, j) represents the set {ki....kj} U {d_(i - 1).....d_j}
 
-Base bases
----------
-dp[0][0] = (a0 % 3 == 0) ? a0 : 0
-dp[0][1] = (a0 % 3 == 1) ? a0 : -1
-dp[0][2] = (a0 % 3 == 2) ? a0 : -1
+1.	e(i, j) denotes the expected search cost of the optimal subtree with state (i, j)
 
-Recursive definition
-=====================
-Calculating dp[i][m]
-We will tackle with 2 cases:
+2.	-	w(i, j) denotes the surplus search cost incurred when the optimal subtree
+		is appended to a root node.
+	-	w(i, j) = (pi + .. + pj) + (q_(i - 1) + .. q(j))
 
-Case 1: include ai
--------------------
-let r = (m - (ai % 3) + 3) % 3
-if dp[i-1][r] = -1 then res1 = -1
-else res1 = dp[i-1][r] + ai
+3.	-	root(i, j) denotes the root of the optimal subtree for (i, j).
+	-	root nodes can only be amoung the ki's and not the dummy nodes.
 
-Case 2: exclude ai	
--------------------
-res2 = dp[i - 1][m]
+Base states
+===========
+Base states = {(i, i - 1) | 1 <= i <= n + 1}
+(i, i - 1) is the set {d_(i - 1)}
+e(i, i - 1) = q_(i - 1) since there is only one node so, (0 + 1) * (q_(i - 1)) = q_(i - 1)
+w(i, i - 1) = q_(i - 1)
+root(i, i - 1) = null since there should not be any root to this empty subtree.
 
-Finally, dp[i][m] = max(res1, res2)
+Recursion
+=========
+given (i, j):
+we precompute w(i, j) = w(i, j - 1) + p(j - 1) + q(j);
+and then for each r such that i <= r <= j
+- we have to make kr the root node
+- put ki..k_(r-1) to the left.
+- put k_(r + 1)..kj to the right subtree.
+- calcuate expected cost in each shape and update e(i, j) = min(e(i, j), curr exp cost).
+  Also update the root to kr.
+  
+so assume r is what results in the optimal subtree:
+e(i, j) = pr + e(i, r - 1) + w(i, r - 1) + e(r + 1, j) + w(r + 1, j)
+now since w(i, r - 1) + pr + w(r + 1, j) = w(i, j) we get:
+e(i, j) = e(i, r - 1) + e(r + 1, j) + w(i, j)
 */
 
-int maximalSubsetSum(vector<int>arr){
-	int n = arr.size();
-	if(n == 0){
-		return 0;
+class Node{
+	public:
+	string val;
+	Node *left, *right;
+};
+
+Node *build(int i, int j, vector<vector<int>>&roots, vector<string>&keys){
+	if(j < i){
+		return nullptr;
 	}
-	vector<vector<int>>dp(n, vector<int>(3, -1));
-	
-	// base cases
-	dp[0][0] = (arr[0] % 3 == 0) ? arr[0] : 0;
-	dp[0][1] = (arr[0] % 3 == 1) ? arr[0] : -1;
-	dp[0][2] = (arr[0] % 3 == 2) ? arr[0] : -1;
+	else{
+		Node *curr = new Node();
+		int r = roots[i][j];
+		curr->val = keys[r - 1];
+		curr->left = build(i, r - 1, roots, keys);
+		curr->right = build(r + 1, j, roots, keys);
+		return curr;
+	}
+}
 
-	for(int i = 1; i < n; i++){
-		for(int m = 0; m < 3; m++){
-			
-			// include ai
-			int res1;
-			int r = (m - (arr[i] % 3) + 3) % 3;
-			if(dp[i - 1][r] == -1){
-				res1 = -1;
+void show(Node *node){
+	if(node){
+		cout << node->val << ' ';
+		show(node->left);
+		show(node->right);
+	}
+}
+
+double bottom_up(vector<double>p, vector<double>q, vector<string>keys, Node *&root){
+
+	// input validation
+	if(p.size() != keys.size() || q.size() != p.size() + 1){
+		cout << "\ninput validation failure\n";
+		return -1;
+	}
+
+	else{
+		
+		// initialise dp tables
+		int n = keys.size();
+		vector<vector<double>>e(n + 2, vector<double>(n + 2, 0)), w(n + 2, vector<double>(n + 2, 0));
+		vector<vector<int>>roots(n + 2, vector<int>(n + 2, -1));
+
+		// base states
+		for(int i = 1; i <= n + 1; i++){
+			e[i][i - 1] = q[i - 1];
+			w[i][i- 1] = q[i - 1];
+		}	
+
+		// recursion
+		for(int k = 1; k <= n; k++){
+			for(int i = 1; i <= n - k + 1; i++){
+				int j = i + k - 1;
+
+				// calculating e(i, j), w(i, j) and r(i, j)
+				double temp = 1e9;
+				w[i][j] = w[i][j - 1] + p[j-1] + q[j];
+				for(int r = i; r <= j; r++){
+					double curr = e[i][r - 1] + e[r + 1][j] + w[i][j];
+					if(curr < temp){
+						temp = curr;
+						roots[i][j] = r;
+					}
+				}
+
+				e[i][j] = temp;
 			}
-			else{
-				res1 = dp[i - 1][r] + arr[i];
-			}
-
-			// exclude ai
-			int res2 = dp[i - 1][m];
-
-			dp[i][m] = max(res1, res2);
 		}
-	}
 
-	return dp[n - 1][0];
+		root = build(1, n, roots, keys);
+
+		return e[1][n];
+	}
 }
 
 int main(){
-	vector<int>arr = {1, 2, 5, 3};
-	cout << maximalSubsetSum(arr);
+	vector<string>keys = {"about", "ask", "did", "what", "you"};
+	vector<double>
+	p = {0.15, 0.10, 0.05,0.10, 0.20},
+	q = {0.05, 0.10, 0.05, 0.05, 0.05, 0.10};
+	Node *root;
+	cout << bottom_up(p, q, keys, root) << endl;
+	show(root);
+	return 0;
 }
